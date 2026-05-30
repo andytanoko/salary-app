@@ -10,7 +10,7 @@ import openpyxl
 from generate_payslip import build_docx
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(32)   # random key each restart — sessions clear on restart
+app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
 _BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 EXCEL_PATH  = os.environ.get("EXCEL_PATH", os.path.join(_BASE_DIR, "data-pribadi-pegawai.xlsx"))
@@ -188,5 +188,7 @@ if __name__ == "__main__":
         print("[WARNING] users.json not found — run create_user.py first to add a user.")
     print(f"[Payslip App] Excel:   {os.path.abspath(EXCEL_PATH)}")
     print(f"[Payslip App] Output:  {OUTPUT_DIR}")
-    print(f"[Payslip App] Open     http://localhost:5000")
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') == 'development'
+    print(f"[Payslip App] Starting on port {port} (debug={debug})")
+    app.run(debug=debug, port=port, host='0.0.0.0')
