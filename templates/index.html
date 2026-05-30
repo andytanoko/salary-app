@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Otopia Payslip Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f0f4f8;
+      color: #1a2b3c;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a3c5e;
+      color: white;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+    header .logo {
+      width: 40px; height: 40px;
+      background: #d0e8f5;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800; color: #1a3c5e;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 18px; font-weight: 700; letter-spacing: .3px; }
+    header p  { font-size: 12px; opacity: .75; }
+    header .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    header .user-badge   { font-size: 13px; opacity: .85; }
+    header .btn-logout {
+      padding: 7px 16px;
+      background: rgba(255,255,255,.15);
+      border: 1.5px solid rgba(255,255,255,.4);
+      border-radius: 7px;
+      color: white; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      transition: background .15s;
+    }
+    header .btn-logout:hover { background: rgba(255,255,255,.28); }
+
+    /* ── Global bar ── */
+    .global-bar {
+      max-width: 980px;
+      margin: 24px auto 0;
+      padding: 0 20px;
+    }
+    .global-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 16px;
+      align-items: end;
+    }
+    @media(max-width:700px){ .global-card{ grid-template-columns:1fr 1fr; } }
+    @media(max-width:420px){ .global-card{ grid-template-columns:1fr; } }
+    .global-card .card-title {
+      grid-column: 1 / -1;
+      font-size: 13px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .8px;
+      color: #1a3c5e;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #eaf2fb;
+      margin-bottom: 4px;
+    }
+    .global-highlight {
+      background: #eaf2fb;
+      border: 2px solid #1a3c5e;
+      border-radius: 9px;
+      padding: 12px 14px;
+    }
+    .global-highlight label {
+      color: #1a3c5e;
+    }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 980px;
+      margin: 20px auto 32px;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+    }
+    @media(max-width:720px){ main{ grid-template-columns:1fr; } }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .card h2 {
+      font-size: 13px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .8px;
+      color: #1a3c5e;
+      margin-bottom: 18px; padding-bottom: 10px;
+      border-bottom: 2px solid #eaf2fb;
+    }
+
+    .field { margin-bottom: 14px; }
+    label {
+      display: block;
+      font-size: 12px; font-weight: 600;
+      color: #4a6275;
+      margin-bottom: 5px;
+    }
+    input, select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid #d0dde8;
+      border-radius: 7px;
+      font-size: 14px;
+      color: #1a2b3c;
+      background: #fafcff;
+      transition: border-color .15s;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: #1a3c5e; background: #fff; }
+    input[readonly] { background: #f0f4f8; color: #607080; cursor: default; }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .7px; color: #8a9bac;
+      margin: 18px 0 10px;
+    }
+
+    .btn {
+      width: 100%; padding: 12px;
+      border: none; border-radius: 8px;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity .15s, transform .1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn-primary { background: #1a3c5e; color: white; margin-top: 6px; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+
+    .summary {
+      background: #f4f8fc;
+      border: 1.5px solid #d0e8f5;
+      border-radius: 9px;
+      padding: 16px;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+    .summary-row {
+      display: flex; justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid #e0ecf5;
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-row .label { color: #607080; }
+    .summary-row .value { font-weight: 600; }
+    .summary-total {
+      display: flex; justify-content: space-between;
+      padding: 10px 0 4px; margin-top: 6px;
+    }
+    .summary-total .label { font-weight: 700; color: #1a3c5e; font-size: 14px; }
+    .summary-total .value { font-weight: 800; color: #1a3c5e; font-size: 16px; }
+
+    .employee-list { display: flex; flex-direction: column; gap: 10px; }
+    .emp-card {
+      background: #f4f8fc;
+      border: 1.5px solid #d0e8f5;
+      border-radius: 9px;
+      padding: 14px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .emp-card:hover { border-color: #1a3c5e; background: #eaf2fb; }
+    .emp-card.selected { border-color: #1a3c5e; background: #d5e8f5; }
+    .emp-card .emp-name { font-weight: 700; font-size: 14px; }
+    .emp-card .emp-role { font-size: 12px; color: #607080; }
+    .emp-card .emp-salary { font-size: 13px; font-weight: 600; color: #1a3c5e; }
+    .check-icon { font-size: 18px; color: #1a3c5e; }
+
+    #toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: #1a3c5e; color: white;
+      padding: 13px 22px; border-radius: 10px;
+      font-size: 14px; font-weight: 600;
+      box-shadow: 0 4px 18px rgba(0,0,0,.22);
+      opacity: 0; transform: translateY(12px);
+      transition: opacity .25s, transform .25s;
+      pointer-events: none; z-index: 999; max-width: 320px;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.error   { background: #c0392b; }
+    #toast.success { background: #1a6e3c; }
+
+    .gen-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .gen-item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #eaf5ee; border: 1px solid #a8ddb5;
+      border-radius: 7px; padding: 10px 14px; font-size: 13px;
+    }
+    .gen-item a {
+      color: #1a6e3c; font-weight: 700; text-decoration: none; font-size: 12px;
+      padding: 4px 10px; border: 1.5px solid #1a6e3c; border-radius: 5px;
+    }
+    .gen-item a:hover { background: #1a6e3c; color: white; }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">O</div>
+  <div>
+    <h1>Otopia Payslip Generator</h1>
+    <p>OTOPIA Batam 2 — Generate payslips from employee data</p>
+  </div>
+  <div class="header-right">
+    <span class="user-badge">👤 {{ username }}</span>
+    <a href="/logout" class="btn-logout">Keluar</a>
+  </div>
+</header>
+
+<!-- ── GLOBAL INPUTS (shared across all employees) ── -->
+<div class="global-bar">
+  <div class="global-card">
+    <div class="card-title">🌐 Input Global — berlaku untuk semua karyawan bulan ini</div>
+
+    <div class="field">
+      <label>Periode</label>
+      <input id="f-period" type="text"/>
+    </div>
+
+    <div class="field global-highlight">
+      <label>Jumlah Coating</label>
+      <input id="f-coating" type="number" min="0" value="0" placeholder="0"/>
+    </div>
+
+    <div class="field global-highlight">
+      <label>Jumlah Detailing</label>
+      <input id="f-detailing" type="number" min="0" value="0" placeholder="0"/>
+    </div>
+
+    <div class="field global-highlight">
+      <label>Jumlah Maintenance</label>
+      <input id="f-maintenance" type="number" min="0" value="0" placeholder="0"/>
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <!-- ── LEFT: employee selector ── -->
+  <div>
+    <div class="card">
+      <h2>📋 Pilih Karyawan</h2>
+      <div id="emp-list" class="employee-list">
+        <p style="color:#8a9bac;font-size:13px">Memuat data karyawan…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT: per-employee inputs ── -->
+  <div style="display:flex;flex-direction:column;gap:24px;">
+
+    <div class="card" id="form-card">
+      <h2>📝 Input Per Karyawan</h2>
+
+      <div class="field">
+        <label>Nama Karyawan</label>
+        <input id="f-nama" type="text" readonly placeholder="Pilih karyawan di kiri"/>
+      </div>
+      <div class="field">
+        <label>Jabatan</label>
+        <input id="f-jabatan" type="text" readonly/>
+      </div>
+
+      <div class="section-label">🍽 Uang Makan & Tunjangan</div>
+      <div class="row2">
+        <div class="field">
+          <label>Hari Kerja (Uang Makan)</label>
+          <input id="f-makan-days" type="number" min="0" value="0" placeholder="0"/>
+        </div>
+        <div class="field">
+          <label>THR (opsional)</label>
+          <input id="f-thr" type="number" min="0" value="0" placeholder="0"/>
+        </div>
+      </div>
+
+      <div class="section-label">💳 Kasbon</div>
+      <div class="field">
+        <label>Cicilan Kasbon (potongan)</label>
+        <input id="f-kasbon" type="number" min="0" value="0" placeholder="0"/>
+      </div>
+
+      <!-- Live summary -->
+      <div class="summary" id="summary">
+        <div class="summary-row"><span class="label">Gaji Pokok</span><span class="value" id="s-gp">-</span></div>
+        <div class="summary-row"><span class="label">Komisi Coating</span><span class="value" id="s-k-coating">-</span></div>
+        <div class="summary-row"><span class="label">Komisi Detailing</span><span class="value" id="s-k-detailing">-</span></div>
+        <div class="summary-row"><span class="label">Komisi Maintenance</span><span class="value" id="s-k-maint">-</span></div>
+        <div class="summary-row"><span class="label">Uang Makan</span><span class="value" id="s-makan">-</span></div>
+        <div class="summary-row"><span class="label">THR</span><span class="value" id="s-thr">-</span></div>
+        <div class="summary-row"><span class="label">Kasbon</span><span class="value" id="s-kasbon" style="color:#c0392b">-</span></div>
+        <div class="summary-total">
+          <span class="label">Take Home Pay</span>
+          <span class="value" id="s-total">-</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-generate" disabled>
+        <span class="spinner" id="spinner"></span>
+        <span id="btn-label">Generate DOCX</span>
+      </button>
+    </div>
+
+    <!-- Generated files -->
+    <div class="card" id="result-card" style="display:none">
+      <h2>✅ Payslip Dihasilkan</h2>
+      <div id="gen-list" class="gen-list"></div>
+    </div>
+
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+let employees   = [];
+let selectedEmp = null;
+
+async function init() {
+  const pr = await fetch("/api/period").then(r => r.json());
+  document.getElementById("f-period").value = pr.period;
+
+  const res = await fetch("/api/employees").then(r => r.json());
+  if (!res.ok) { showToast("Gagal memuat data: " + res.error, "error"); return; }
+  employees = res.employees;
+  renderEmployeeList();
+}
+
+function formatRp(n) {
+  n = Math.round(parseFloat(n) || 0);
+  return "Rp" + n.toLocaleString("id-ID");
+}
+
+function renderEmployeeList() {
+  const el = document.getElementById("emp-list");
+  if (!employees.length) {
+    el.innerHTML = '<p style="color:#c0392b;font-size:13px">Tidak ada data karyawan.</p>';
+    return;
+  }
+  el.innerHTML = "";
+  employees.forEach((e, i) => {
+    const card = document.createElement("div");
+    card.className = "emp-card";
+    card.innerHTML = `
+      <div>
+        <div class="emp-name">${e.nama}</div>
+        <div class="emp-role">${e.jabatan || '-'}</div>
+        <div class="emp-salary">${formatRp(e.gaji_pokok)}</div>
+      </div>
+      <span class="check-icon" id="check-${i}" style="display:none">✓</span>
+    `;
+    card.onclick = () => selectEmployee(e, card, i);
+    el.appendChild(card);
+  });
+}
+
+function selectEmployee(emp, card, idx) {
+  document.querySelectorAll(".emp-card").forEach((c, i) => {
+    c.classList.remove("selected");
+    const ch = document.getElementById("check-" + i);
+    if (ch) ch.style.display = "none";
+  });
+  card.classList.add("selected");
+  const ch = document.getElementById("check-" + idx);
+  if (ch) ch.style.display = "";
+
+  selectedEmp = emp;
+  document.getElementById("f-nama").value    = emp.nama;
+  document.getElementById("f-jabatan").value = emp.jabatan || "-";
+  document.getElementById("btn-generate").disabled = false;
+  refreshSummary();
+}
+
+function numVal(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function refreshSummary() {
+  if (!selectedEmp) return;
+  // global inputs
+  const coating   = numVal("f-coating");
+  const detailing = numVal("f-detailing");
+  const maint     = numVal("f-maintenance");
+  // per-employee inputs
+  const makanDays = numVal("f-makan-days");
+  const thr       = numVal("f-thr");
+  const kasbon    = numVal("f-kasbon");
+
+  const gp           = selectedEmp.gaji_pokok;
+  const k_coating    = coating   * selectedEmp.komisi_coating;
+  const k_detailing  = detailing * selectedEmp.komisi_detailing;
+  const k_maint      = maint     * selectedEmp.komisi_maintenance;
+  const total_komisi = k_coating + k_detailing + k_maint;
+  const makan        = makanDays * selectedEmp.uang_makan_per_hari;
+  const subtotal     = gp + total_komisi + makan + thr;
+  const total        = subtotal - kasbon;
+
+  document.getElementById("s-gp").textContent         = formatRp(gp);
+  document.getElementById("s-k-coating").textContent  = k_coating   > 0 ? formatRp(k_coating)  : "-";
+  document.getElementById("s-k-detailing").textContent= k_detailing > 0 ? formatRp(k_detailing) : "-";
+  document.getElementById("s-k-maint").textContent    = k_maint     > 0 ? formatRp(k_maint)     : "-";
+  document.getElementById("s-makan").textContent      = formatRp(makan);
+  document.getElementById("s-thr").textContent        = thr    > 0 ? formatRp(thr)              : "-";
+  document.getElementById("s-kasbon").textContent     = kasbon > 0 ? "- " + formatRp(kasbon)    : "-";
+  document.getElementById("s-total").textContent      = formatRp(total);
+}
+
+// refresh summary whenever any input changes
+["f-coating","f-detailing","f-maintenance","f-makan-days","f-thr","f-kasbon"].forEach(id => {
+  document.getElementById(id).addEventListener("input", refreshSummary);
+});
+
+document.getElementById("btn-generate").addEventListener("click", async () => {
+  if (!selectedEmp) return;
+  const btn     = document.getElementById("btn-generate");
+  const spinner = document.getElementById("spinner");
+  const label   = document.getElementById("btn-label");
+  btn.disabled = true;
+  spinner.style.display = "block";
+  label.textContent = "Membuat DOCX…";
+
+  const payload = {
+    nama:            selectedEmp.nama,
+    period:          document.getElementById("f-period").value,
+    num_coating:     numVal("f-coating"),       // global
+    num_detailing:   numVal("f-detailing"),     // global
+    num_maintenance: numVal("f-maintenance"),   // global
+    uang_makan_days: numVal("f-makan-days"),
+    thr:             numVal("f-thr"),
+    kasbon:          numVal("f-kasbon"),
+  };
+
+  try {
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(r => r.json());
+
+    if (!res.ok) throw new Error(res.error || "Unknown error");
+    addGeneratedFile(res.filename, selectedEmp.nama);
+    showToast("✅ DOCX berhasil dibuat untuk " + selectedEmp.nama, "success");
+  } catch (err) {
+    showToast("❌ Error: " + err.message, "error");
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = "none";
+    label.textContent = "Generate DOCX";
+  }
+});
+
+function addGeneratedFile(filename, nama) {
+  const card = document.getElementById("result-card");
+  const list = document.getElementById("gen-list");
+  card.style.display = "";
+  const item = document.createElement("div");
+  item.className = "gen-item";
+  item.innerHTML = `
+    <span>${nama} — <code style="font-size:11px">${filename}</code></span>
+    <a href="/api/download/${encodeURIComponent(filename)}" target="_blank">⬇ Download</a>
+  `;
+  list.prepend(item);
+}
+
+let toastTimer;
+function showToast(msg, type = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "show " + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ""; }, 3500);
+}
+
+init();
+</script>
+</body>
+</html>
